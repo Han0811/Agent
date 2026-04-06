@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ShopBot AI — Trợ Lý Mua Sắm Thông Minh</title>
+  <meta name="description" content="AI Shopping Assistant giúp bạn tìm giá tốt nhất và đặt hàng nhanh chóng." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- ═══ PARTICLE CANVAS ═══ -->
+<canvas id="particleCanvas"></canvas>
+
+<!-- ═══ HISTORY SIDEBAR ═══ -->
+<aside class="history-sidebar" id="historySidebar">
+  <div class="hs-header">
+    <h3 class="hs-title">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      Lịch sử
+    </h3>
+    <button class="hs-close" id="historyClose" title="Đóng">✕</button>
+  </div>
+  <div class="hs-list" id="historyList">
+    <div class="hs-empty" id="historyEmpty">
+      <span>📭</span>
+      <p>Chưa có lịch sử</p>
+    </div>
+  </div>
+  <div class="hs-footer">
+    <button class="hs-clear-all" id="historyClearAll">🗑 Xoá tất cả</button>
+  </div>
+</aside>
+<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+<!-- ═══ NAVBAR ═══ -->
+<nav class="navbar" id="navbar">
+  <div class="nav-brand">
+    <div class="nav-logo-wrap">
+      <div class="nav-logo-ring"></div>
+      <div class="nav-logo">🛒</div>
+    </div>
+    <div class="nav-title-wrap">
+      <span class="nav-title">ShopBot</span>
+      <span class="nav-ai-tag">AI</span>
+    </div>
+  </div>
+
+  <div class="nav-center">
+    <div class="nav-status-pill" id="statusPill">
+      <span class="pulse-ring"></span>
+      <span class="status-dot"></span>
+      <span class="status-text" id="statusText">Đang khởi động...</span>
+    </div>
+  </div>
+
+  <div class="nav-actions">
+    <button class="icon-btn" id="btnHistory" title="Xem lịch sử">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      <span>Lịch sử</span>
+    </button>
+    <button class="icon-btn" id="btnReset" title="Cuộc trò chuyện mới">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.36"/></svg>
+      <span>Mới</span>
+    </button>
+  </div>
+</nav>
+
+<!-- ═══ APP LAYOUT ═══ -->
+<main class="app-layout">
+
+  <!-- ── LEFT: Chat ── -->
+  <section class="chat-panel" id="chatPanel">
+    <div class="chat-messages" id="chatMessages">
+      <div class="message bot-message" id="welcomeMsg">
+        <div class="avatar-wrap">
+          <div class="bot-avatar"><span class="avatar-emoji">🛒</span><div class="avatar-glow"></div></div>
+        </div>
+        <div class="msg-body">
+          <div class="msg-bubble bot-bubble" id="welcomeBubble">
+            <p>Xin chào! Tôi là <strong>ShopBot AI</strong> 👋</p>
+            <p>Tôi có thể giúp bạn:</p>
+            <div class="feature-list">
+              <div class="feature-item"><span class="fi-icon">🔍</span><span>Tìm kiếm giá tốt nhất từ Google Shopping</span></div>
+              <div class="feature-item"><span class="fi-icon">💰</span><span>So sánh giá từ nhiều nguồn</span></div>
+              <div class="feature-item"><span class="fi-icon">📦</span><span>Đặt hàng ngay trong chat</span></div>
+            </div>
+            <p>Hôm nay bạn muốn mua gì? 🛍️</p>
+          </div>
+          <div class="quick-chips" id="quickChips">
+            <button class="chip" onclick="sendQuick('Tìm iPhone 15 Pro Max giá rẻ nhất')">📱 iPhone 15 Pro Max</button>
+            <button class="chip" onclick="sendQuick('Laptop gaming RTX 4070 giá tốt')">💻 Laptop Gaming</button>
+            <button class="chip" onclick="sendQuick('Tai nghe Sony WH-1000XM5')">🎧 Sony Headphones</button>
+            <button class="chip" onclick="sendQuick('Samsung Galaxy S24 Ultra')">📲 Galaxy S24 Ultra</button>
+            <button class="chip" onclick="sendQuick('Apple Watch Series 9')">⌚ Apple Watch</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Input Area -->
+    <div class="input-zone">
+      <div class="address-input-wrap" id="addressWrap">
+        <div class="addr-icon">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        </div>
+        <input id="addressInput" type="text" placeholder="Địa chỉ giao hàng (tuỳ chọn)" autocomplete="off"/>
+      </div>
+      <div class="text-input-wrap">
+        <textarea id="chatInput" rows="1" placeholder="Nhập tên sản phẩm muốn tìm..." autocomplete="off" spellcheck="false"></textarea>
+        <button class="send-btn" id="sendBtn" onclick="sendMessage()">
+          <span class="send-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          </span>
+          <span class="send-ripple" id="sendRipple"></span>
+        </button>
+      </div>
+      <div class="input-hint">
+        <kbd>Enter</kbd> để gửi &nbsp;·&nbsp; <kbd>Shift+Enter</kbd> xuống dòng &nbsp;·&nbsp; <kbd>Double-click</kbd> card để mở trang sản phẩm
+      </div>
+    </div>
+  </section>
+
+  <!-- ── RIGHT: Products ── -->
+  <section class="product-panel" id="productPanel">
+    <div class="product-header">
+      <div class="product-header-left">
+        <h2 class="panel-label">Kết quả</h2>
+        <div class="product-count-badge" id="countBadge">
+          <span id="productCount">0</span> sản phẩm
+        </div>
+      </div>
+      <div class="sort-controls" id="sortControls" style="opacity:0;">
+        <button class="sort-btn active" data-sort="default">Mặc định</button>
+        <button class="sort-btn" data-sort="price-asc">Giá ↑</button>
+        <button class="sort-btn" data-sort="price-desc">Giá ↓</button>
+      </div>
+    </div>
+
+    <div class="products-area" id="productsArea">
+      <div class="empty-state" id="emptyState">
+        <div class="empty-animation">
+          <div class="empty-circle c1"></div>
+          <div class="empty-circle c2"></div>
+          <div class="empty-circle c3"></div>
+          <div class="empty-emoji">🛍️</div>
+        </div>
+        <h3>Chưa có sản phẩm</h3>
+        <p>Nhập tên sản phẩm vào chat để tôi tìm ngay cho bạn</p>
+        <p class="hint-text">💡 <strong>Double-click</strong> hoặc <strong>Ctrl+click</strong> vào card để mở trang sản phẩm</p>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ═══ HISTORY DETAIL MODAL ═══ -->
+<div class="modal-overlay" id="historyModal">
+  <div class="modal-card history-detail-card" id="historyDetailCard">
+    <div class="modal-nav">
+      <button class="back-btn" onclick="closeHistoryModal()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+        Quay lại
+      </button>
+      <h3 class="history-detail-title" id="historyDetailTitle">Lịch sử</h3>
+    </div>
+    <div class="history-detail-messages" id="historyDetailMessages"></div>
+  </div>
+</div>
+
+<!-- ═══ ORDER SUCCESS MODAL ═══ -->
+<div class="modal-overlay" id="orderModal">
+  <canvas class="confetti-canvas" id="confettiCanvas"></canvas>
+  <div class="modal-card" id="modalCard">
+    <div class="modal-success-header">
+      <div class="success-rings">
+        <div class="ring r1"></div>
+        <div class="ring r2"></div>
+        <div class="ring r3"></div>
+        <div class="success-check">✓</div>
+      </div>
+      <h2>Đặt hàng thành công!</h2>
+      <p class="modal-sub">Đơn hàng của bạn đã được xác nhận</p>
+    </div>
+    <div class="modal-order-info" id="orderDetails"></div>
+    <div class="modal-actions">
+      <button class="btn-track ripple-btn" onclick="closeModal()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        Tiếp tục mua sắm
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ TOAST ═══ -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script src="app.js"></script>
+</body>
+</html>
